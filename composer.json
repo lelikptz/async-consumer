@@ -1,0 +1,24 @@
+{
+    "name": "lelikptz/async-consumer",
+    "autoload": {
+        "psr-4": {
+            "lelikptz\\AsyncConsumer\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "lelikptz",
+            "email": "alexey@orlov.tech"
+        }
+    ],
+    "require": {
+        "ext-curl": "*",
+        "ext-http": "*",
+        "psr/http-message": "^2.0",
+        "guzzlehttp/guzzle": "^7.8",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "vimeo/psalm": "^5.15"
+    }
+}
