@@ -1,5 +1,8 @@
 {
     "name": "lelikptz/async-consumer",
+    "description": "Async consumer based on Fibers",
+    "type": "library",
+    "license": "MIT",
     "autoload": {
         "psr-4": {
             "lelikptz\\AsyncConsumer\\": "src/"
