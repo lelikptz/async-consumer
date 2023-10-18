@@ -29,6 +29,7 @@ final class AsyncConsumer implements ConsumerInterface
             while (!$this->batchIsFilled($batch, $time)) {
                 $promise = $this->provider->get();
                 if ($promise !== null) {
+                    $promise->start();
                     $batch[] = $promise;
                 }
             }
@@ -61,7 +62,6 @@ final class AsyncConsumer implements ConsumerInterface
         $fibers = [];
         foreach ($batch as $promise) {
             $fiber = new Fiber(function (PromiseInterface $promise) {
-                $promise->start();
                 do {
                     Fiber::suspend();
                     usleep(1000);
