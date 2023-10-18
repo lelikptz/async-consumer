@@ -15,6 +15,7 @@
         }
     ],
     "require": {
+        "php": ">=8.1",
         "ext-curl": "*",
         "ext-http": "*",
         "psr/http-message": "^2.0",
@@ -22,6 +23,15 @@
         "psr/log": "^3.0"
     },
     "require-dev": {
-        "vimeo/psalm": "^5.15"
+        "vimeo/psalm": "^5.15",
+        "friendsofphp/php-cs-fixer": "^3.35",
+        "roave/security-advisories": "dev-latest"
+    },
+    "support": {
+        "issues": "https://github.com/lelikptz/async-consumer/issues"
+    },
+    "scripts": {
+        "cs": "@php ./vendor/bin/php-cs-fixer fix . --using-cache=no",
+        "psalm": "@php ./vendor/bin/psalm"
     }
 }

@@ -16,6 +16,7 @@ final class AsyncConsumer implements ConsumerInterface
     public function __construct(
         private readonly ProviderInterface $provider,
         private readonly int $concurrency,
+        private readonly int $maxBatchCollectTimeInSeconds,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -25,40 +26,59 @@ final class AsyncConsumer implements ConsumerInterface
         while (true) {
             $time = time();
             $batch = [];
-            while (count($batch) < $this->concurrency) {
-                $batch[] = $this->provider->get();
+            while (!$this->batchIsFilled($batch, $time)) {
+                $promise = $this->provider->get();
+                if ($promise !== null) {
+                    $batch[] = $promise;
+                }
             }
 
-            $fibers = [];
-            foreach ($batch as $promise) {
-                $fiber = new Fiber(function (PromiseInterface $promise) {
-                    $this->execute($promise);
-                });
-                $fiber->start($promise);
-
-                $fibers[] = $fiber;
+            try {
+                $start = time();
+                $this->execute($batch);
+                $this->logger->info(sprintf('Batch successful completed in %s seconds', time() - $start));
+            } catch (Throwable $throwable) {
+                $this->logger->error('Batch execute error', [
+                    'message' => $throwable->getMessage(),
+                    'trace' => $throwable->getTraceAsString(),
+                ]);
             }
-            $this->wait($fibers);
-            $this->logger->info(sprintf('Batch completed in %s seconds', time() - $time));
         }
     }
 
+    private function batchIsFilled(array $batch, int $time): bool
+    {
+        return count($batch) === $this->concurrency
+            || count($batch) > 0 && (time() - $time) > $this->maxBatchCollectTimeInSeconds;
+    }
+
     /**
+     * @param PromiseInterface[] $batch
      * @throws Throwable
      */
-    private function execute(PromiseInterface $promise): void
+    private function execute(array $batch): void
     {
-        do {
-            Fiber::suspend();
-            usleep(1000);
-        } while ($promise->getStatus() === Status::PENDING);
+        $fibers = [];
+        foreach ($batch as $promise) {
+            $fiber = new Fiber(function (PromiseInterface $promise) {
+                $promise->start();
+                do {
+                    Fiber::suspend();
+                    usleep(1000);
+                } while ($promise->getStatus() === Status::PENDING);
+            });
+            $fiber->start($promise);
+
+            $fibers[] = $fiber;
+        }
+        $this->wait($fibers);
     }
 
     /**
      * @param Fiber[] $fibers
      * @throws Throwable
      */
-    public function wait(array $fibers): void
+    private function wait(array $fibers): void
     {
         while (count($fibers)) {
             usleep(1000);

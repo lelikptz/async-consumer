@@ -6,5 +6,5 @@ namespace lelikptz\AsyncConsumer\Promise;
 
 interface ProviderInterface
 {
-    public function get(): PromiseInterface;
+    public function get(): ?PromiseInterface;
 }
