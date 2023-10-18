@@ -61,9 +61,13 @@ final class Handler implements ResponseHandlerInterface
 ```php
 final class Provider implements ProviderInterface
 {
+    public function __construct(private readonly LoggerInterface $logger)
+    {
+    }
+
     public function get(): ?PromiseInterface
     {
-        return new CurlPromise(new Factory(), new Handler());
+        return new GuzzlePromise(new Factory($this->logger), new Handler($this->logger));
     }
 }
 ```
