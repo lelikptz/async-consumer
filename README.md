@@ -61,7 +61,7 @@ final class Handler implements ResponseHandlerInterface
 ```php
 final class Provider implements ProviderInterface
 {
-    public function get(): PromiseInterface
+    public function get(): ?PromiseInterface
     {
         return new CurlPromise(new Factory(), new Handler());
     }
