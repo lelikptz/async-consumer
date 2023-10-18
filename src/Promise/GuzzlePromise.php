@@ -31,8 +31,10 @@ final class GuzzlePromise implements PromiseInterface
     {
         $this->promise = $this->client->sendAsync($this->factory->create());
         $this->promise->then(
-            fn (Response $response) => $this->responseHandler->handle($response),
-            fn (RequestException $exception) => throw new $exception(),
+            fn(Response $response) => $this->responseHandler->onSuccess($response),
+            fn(RequestException $exception) => $this->responseHandler->onException(
+                new PromiseException($exception->getMessage(), $exception->getCode(), $exception)
+            ),
         );
     }
 
