@@ -7,7 +7,7 @@
 операцией
 является http запрос через guzzle.
 
-Пример использования GuzzlePromise:
+## Пример использования GuzzlePromise:
 
 Имплементируем фабрику для создания реквеста:
 
@@ -82,4 +82,32 @@ $concurrency.
 ```php
 $logger = new ConsoleLogger(new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG));
 (new AsyncConsumer(new Provider($logger), $concurrency, $maxBatchCollectTimeInSeconds, $logger))->consume();
+```
+
+## Пример использования rabbitmq как провайдера задач:
+
+Для использования [AMPQProvider.php](src%2FProvider%2FAMPQProvider.php) имплементируем TransformerInterface для создания PromiseInterface из сообщения AMQPMessage:
+
+```php
+final class Transformer implements TransformerInterface
+{
+    public function __construct(private readonly LoggerInterface $logger)
+    {
+    }
+
+    public function transform(AMQPMessage $message): PromiseInterface
+    {
+        return new GuzzlePromise(new Factory($this->logger), new Handler($this->logger));
+    }
+}
+```
+
+Собираем и запускаем:
+
+```php
+$connection = new AMQPStreamConnection('localhost', '5672', 'guest', 'guest');
+$provider = new AMPQProvider($connection, 'provider', new Transformer($logger));
+$logger = new ConsoleLogger(new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG));
+
+(new AsyncConsumer($provider, $concurrency, $maxBatchCollectTimeInSeconds, $logger))->consume();
 ```

@@ -23,6 +23,8 @@ final class AsyncConsumer implements ConsumerInterface
 
     public function consume(): void
     {
+        $this->logger->info('Consumer starting...');
+
         while (true) {
             $time = time();
             $batch = [];
@@ -32,6 +34,7 @@ final class AsyncConsumer implements ConsumerInterface
                     $promise->start();
                     $batch[] = $promise;
                 }
+                usleep(100000);
             }
 
             try {
