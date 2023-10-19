@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace lelikptz\AsyncConsumer\Provider;
 
-use lelikptz\AsyncConsumer\Promise\PromiseInterface;
+use lelikptz\AsyncConsumer\Task\TaskInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
@@ -21,7 +21,7 @@ final class AMPQProvider implements ProviderInterface
         $this->channel->queue_declare($this->queue, false, true, false, false);
     }
 
-    public function get(): ?PromiseInterface
+    public function get(): ?TaskInterface
     {
         $message = $this->channel->basic_get($this->queue);
         if ($message !== null) {

@@ -2,22 +2,24 @@
 
 declare(strict_types=1);
 
-namespace lelikptz\AsyncConsumer\Promise;
+namespace lelikptz\AsyncConsumer\Task\Http;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Psr7\Response;
-use lelikptz\AsyncConsumer\Promise\Exception\PromiseException;
+use lelikptz\AsyncConsumer\Task\Status;
+use lelikptz\AsyncConsumer\Task\TaskInterface;
 
-final class GuzzlePromise implements PromiseInterface
+final class Task implements TaskInterface
 {
     private CurlMultiHandler $curl;
 
     private Client $client;
 
-    private ?\GuzzleHttp\Promise\PromiseInterface $promise = null;
+    private ?PromiseInterface $promise = null;
 
     public function __construct(
         private readonly RequestFactoryInterface $factory,
@@ -27,21 +29,10 @@ final class GuzzlePromise implements PromiseInterface
         $this->client = new Client(['handler' => HandlerStack::create($this->curl)]);
     }
 
-    public function start(): void
-    {
-        $this->promise = $this->client->sendAsync($this->factory->create());
-        $this->promise->then(
-            fn (Response $response) => $this->responseHandler->onSuccess($response),
-            fn (RequestException $exception) => $this->responseHandler->onException(
-                new PromiseException($exception->getMessage(), $exception->getCode(), $exception)
-            ),
-        );
-    }
-
     public function getStatus(): Status
     {
         if ($this->promise === null) {
-            throw new PromiseException('First you need to call the method start');
+            $this->init();
         }
 
         $this->curl->tick();
@@ -50,5 +41,14 @@ final class GuzzlePromise implements PromiseInterface
         }
 
         return Status::OK;
+    }
+
+    private function init(): void
+    {
+        $this->promise = $this->client->sendAsync($this->factory->create());
+        $this->promise->then(
+            fn(Response $response) => $this->responseHandler->onSuccess($response),
+            fn(RequestException $exception) => $this->responseHandler->onException($exception),
+        );
     }
 }

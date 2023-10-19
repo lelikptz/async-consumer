@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace lelikptz\AsyncConsumer\Consumer;
 
 use Fiber;
-use lelikptz\AsyncConsumer\Promise\PromiseInterface;
-use lelikptz\AsyncConsumer\Promise\Status;
 use lelikptz\AsyncConsumer\Provider\ProviderInterface;
+use lelikptz\AsyncConsumer\Task\Status;
+use lelikptz\AsyncConsumer\Task\TaskInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -29,10 +29,9 @@ final class AsyncConsumer implements ConsumerInterface
             $time = time();
             $batch = [];
             while (!$this->batchIsFilled($batch, $time)) {
-                $promise = $this->provider->get();
-                if ($promise !== null) {
-                    $promise->start();
-                    $batch[] = $promise;
+                $task = $this->provider->get();
+                if ($task !== null) {
+                    $batch[] = $task;
                 }
                 usleep(100000);
             }
@@ -64,20 +63,20 @@ final class AsyncConsumer implements ConsumerInterface
     }
 
     /**
-     * @param PromiseInterface[] $batch
+     * @param TaskInterface[] $batch
      * @throws Throwable
      */
     private function execute(array $batch): void
     {
         $fibers = [];
-        foreach ($batch as $promise) {
-            $fiber = new Fiber(function (PromiseInterface $promise) {
+        foreach ($batch as $task) {
+            $fiber = new Fiber(function (TaskInterface $task) {
                 do {
                     Fiber::suspend();
                     usleep(1000);
-                } while ($promise->getStatus() === Status::PENDING);
+                } while ($task->getStatus() === Status::PENDING);
             });
-            $fiber->start($promise);
+            $fiber->start($task);
 
             $fibers[] = $fiber;
         }

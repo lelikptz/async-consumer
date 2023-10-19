@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace lelikptz\AsyncConsumer\Promise;
+namespace lelikptz\AsyncConsumer\Task;
 
 enum Status
 {

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace lelikptz\AsyncConsumer\Provider;
 
-use lelikptz\AsyncConsumer\Promise\PromiseInterface;
+use lelikptz\AsyncConsumer\Task\TaskInterface;
 
 interface ProviderInterface
 {
-    public function get(): ?PromiseInterface;
+    public function get(): ?TaskInterface;
 }

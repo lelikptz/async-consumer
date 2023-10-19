@@ -1,13 +1,12 @@
 # Async consumer
 
-Асинхронный consumer реализованный с помощью Fiber. Для работы необходимо имплементировать PromiseInterface.
-Он должен возвращать статус неблокирующей операции, которую можно распараллелить.
+Асинхронный consumer реализованный с помощью Fiber. Для работы необходимо имплементировать TaskInterface.
+Реализация должна возвращать статус неблокирующей операции, которую можно распараллелить.
 
-В [GuzzlePromise.php](src%2FPromise%2FGuzzlePromise.php) пример имплементации PromiseInterface где неблокирующей
-операцией
-является http запрос через guzzle.
+В [Task.php](src%2FTask%2FHttp%2FTask.php) пример имплементации PromiseInterface где неблокирующей
+операцией является http запрос через guzzle.
 
-## Пример использования GuzzlePromise:
+## Пример использования Http\Task:
 
 Имплементируем фабрику для создания реквеста:
 
@@ -21,7 +20,7 @@ final class Factory implements RequestFactoryInterface
     public function create(): RequestInterface
     {
         $this->logger->info('Some logic for creating request');
-        
+
         return new Request('GET', 'https://www.google.com');
     }
 }
@@ -49,14 +48,14 @@ final class Handler implements ResponseHandlerInterface
         $this->logger->info('Finish');
     }
 
-    public function onException(PromiseException $exception): void
+    public function onException(RequestException $exception): void
     {
         $this->logger->error($exception->getMessage());
     }
 }
 ```
 
-Провайдер задач собирает необходимый promise и возвращает его в консьюмер по мере готовности:
+Провайдер задач собирает необходимую таску и возвращает её в консьюмер по мере готовности:
 
 ```php
 final class Provider implements ProviderInterface
@@ -65,9 +64,9 @@ final class Provider implements ProviderInterface
     {
     }
 
-    public function get(): ?PromiseInterface
+    public function get(): ?TaskInterface
     {
-        return new GuzzlePromise(new Factory($this->logger), new Handler($this->logger));
+        return new Task(new Factory($this->logger), new Handler($this->logger));
     }
 }
 ```
@@ -86,7 +85,8 @@ $logger = new ConsoleLogger(new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG))
 
 ## Пример использования rabbitmq как провайдера задач:
 
-Для использования [AMPQProvider.php](src%2FProvider%2FAMPQProvider.php) имплементируем TransformerInterface для создания PromiseInterface из сообщения AMQPMessage:
+Для использования [AMPQProvider.php](src%2FProvider%2FAMPQProvider.php) имплементируем TransformerInterface для создания
+PromiseInterface из сообщения AMQPMessage:
 
 ```php
 final class Transformer implements TransformerInterface
@@ -97,7 +97,7 @@ final class Transformer implements TransformerInterface
 
     public function transform(AMQPMessage $message): PromiseInterface
     {
-        return new GuzzlePromise(new Factory($this->logger), new Handler($this->logger));
+        return new Task(new Factory($this->logger), new Handler($this->logger));
     }
 }
 ```

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace lelikptz\AsyncConsumer\Promise;
+namespace lelikptz\AsyncConsumer\Task\Http;
 
-use lelikptz\AsyncConsumer\Promise\Exception\PromiseException;
+use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 
 interface ResponseHandlerInterface
 {
     public function onSuccess(ResponseInterface $response): void;
 
-    public function onException(PromiseException $exception): void;
+    public function onException(RequestException $exception): void;
 }
