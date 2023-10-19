@@ -6,8 +6,8 @@ namespace lelikptz\AsyncConsumer\Consumer;
 
 use Fiber;
 use lelikptz\AsyncConsumer\Promise\PromiseInterface;
-use lelikptz\AsyncConsumer\Promise\ProviderInterface;
 use lelikptz\AsyncConsumer\Promise\Status;
+use lelikptz\AsyncConsumer\Provider\ProviderInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -37,13 +37,20 @@ final class AsyncConsumer implements ConsumerInterface
             try {
                 $start = time();
                 $this->execute($batch);
-                $this->logger->info(sprintf('Batch successful completed in %s seconds', time() - $start));
+                $this->logger->info(
+                    sprintf(
+                        'Batch with %s tasks successful completed in %s seconds',
+                        count($batch),
+                        time() - $start,
+                    ),
+                );
             } catch (Throwable $throwable) {
                 $this->logger->error('Batch execute error', [
                     'message' => $throwable->getMessage(),
                     'trace' => $throwable->getTraceAsString(),
                 ]);
             }
+            usleep(300000);
         }
     }
 
