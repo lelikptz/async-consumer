@@ -32,7 +32,11 @@ final class Task implements TaskInterface
     public function getStatus(): Status
     {
         if ($this->promise === null) {
-            $this->init();
+            $this->promise = $this->client->sendAsync($this->factory->create());
+            $this->promise->then(
+                fn (Response $response) => $this->responseHandler->onSuccess($response),
+                fn (RequestException $exception) => $this->responseHandler->onException($exception),
+            );
         }
 
         $this->curl->tick();
@@ -41,14 +45,5 @@ final class Task implements TaskInterface
         }
 
         return Status::OK;
-    }
-
-    private function init(): void
-    {
-        $this->promise = $this->client->sendAsync($this->factory->create());
-        $this->promise->then(
-            fn(Response $response) => $this->responseHandler->onSuccess($response),
-            fn(RequestException $exception) => $this->responseHandler->onException($exception),
-        );
     }
 }

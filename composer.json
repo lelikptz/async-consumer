@@ -1,6 +1,11 @@
 {
     "name": "lelikptz/async-consumer",
     "description": "Async consumer based on Fibers",
+    "keywords": [
+        "consumer",
+        "fiber",
+        "async"
+    ],
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -10,7 +15,7 @@
     },
     "authors": [
         {
-            "name": "lelikptz",
+            "name": "Aleksei Orlov",
             "email": "alexey@orlov.tech"
         }
     ],

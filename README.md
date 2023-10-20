@@ -3,7 +3,7 @@
 Асинхронный consumer реализованный с помощью Fiber. Для работы необходимо имплементировать TaskInterface.
 Реализация должна возвращать статус неблокирующей операции, которую можно распараллелить.
 
-В [Task.php](src%2FTask%2FHttp%2FTask.php) пример имплементации PromiseInterface где неблокирующей
+В [Task.php](src%2FTask%2FHttp%2FTask.php) пример имплементации TaskInterface где неблокирующей
 операцией является http запрос через guzzle.
 
 ## Пример использования Http\Task:
@@ -86,7 +86,7 @@ $logger = new ConsoleLogger(new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG))
 ## Пример использования rabbitmq как провайдера задач:
 
 Для использования [AMPQProvider.php](src%2FProvider%2FAMPQProvider.php) имплементируем TransformerInterface для создания
-PromiseInterface из сообщения AMQPMessage:
+TaskInterface из сообщения AMQPMessage:
 
 ```php
 final class Transformer implements TransformerInterface
@@ -95,7 +95,7 @@ final class Transformer implements TransformerInterface
     {
     }
 
-    public function transform(AMQPMessage $message): PromiseInterface
+    public function transform(AMQPMessage $message): TaskInterface
     {
         return new Task(new Factory($this->logger), new Handler($this->logger));
     }
