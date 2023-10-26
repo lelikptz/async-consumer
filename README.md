@@ -64,23 +64,22 @@ final class Provider implements ProviderInterface
     {
     }
 
-    public function get(): ?TaskInterface
+    public function get(): array
     {
-        return new Task(new Factory($this->logger), new Handler($this->logger));
+        return [
+            new Task(new Factory($this->logger), new Handler($this->logger)),
+        ];
     }
 }
 ```
 
 Собираем консьюмер и запускаем как демон например через супервизор.
 
-$concurrency - размер батча запросы которого будут выполняться параллельно.
-
-$maxBatchCollectTimeInSeconds - время, которое будем ждать пока провайдер не выдаст количество задач, равное
-$concurrency.
+$pollTimeoutInMicroseconds - дэлэй между опросами провайдера
 
 ```php
 $logger = new ConsoleLogger(new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG));
-(new AsyncConsumer(new Provider($logger), $concurrency, $maxBatchCollectTimeInSeconds, $logger))->consume();
+(new AsyncConsumer(new Provider($logger), new FiberExecutor(), $pollTimeoutInMicroseconds, $logger))->consume();
 ```
 
 ## Пример использования rabbitmq как провайдера задач:
@@ -104,10 +103,19 @@ final class Transformer implements TransformerInterface
 
 Собираем и запускаем:
 
+$maxBatchSize - максимальный размер батча, который будем собирать из rabbitmq и по факту количество распараллеленных
+задач
+
+$maxBatchCollectTimeInSeconds - время, которое ждём пока батч собирается из rabbitmq, если оно вышло запускам обработку
+с тем, что есть
+
+$pollTimeoutInMicroseconds - дэлэй между опросами провайдера
+
 ```php
 $connection = new AMQPStreamConnection('localhost', '5672', 'guest', 'guest');
 $provider = new AMPQProvider($connection, 'provider', new Transformer($logger));
 $logger = new ConsoleLogger(new ConsoleOutput(OutputInterface::VERBOSITY_DEBUG));
+$batch = new BatchProvider($provider, 10, 5, $pollTimeoutInMicroseconds);
 
-(new AsyncConsumer($provider, $concurrency, $maxBatchCollectTimeInSeconds, $logger))->consume();
+(new AsyncConsumer($batch, new FiberExecutor(), $pollTimeoutInMicroseconds, $logger))->consume();
 ```

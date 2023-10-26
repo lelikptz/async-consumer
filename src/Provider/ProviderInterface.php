@@ -8,5 +8,8 @@ use lelikptz\AsyncConsumer\Task\TaskInterface;
 
 interface ProviderInterface
 {
-    public function get(): ?TaskInterface;
+    /**
+     * @return TaskInterface[]
+     */
+    public function get(): array;
 }
